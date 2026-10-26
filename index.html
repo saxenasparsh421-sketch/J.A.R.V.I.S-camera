@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#050b11">
+  <meta name="description" content="J.A.R.V.I.S — standalone camera HUD and on-device object detection PWA.">
+  <meta name="application-name" content="J.A.R.V.I.S">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="J.A.R.V.I.S">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icons/jarvis-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="./icons/jarvis-192.png">
+  <link rel="stylesheet" href="./styles.css">
+  <title>J.A.R.V.I.S — Mobile HUD</title>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true"><span></span><i></i></div>
+        <div>
+          <div class="brand-name">J.A.R.V.I.S<span class="brand-dot">.</span></div>
+          <div class="brand-subtitle">JUST A RATHER VERY INTELLIGENT SYSTEM</div>
+        </div>
+      </div>
+      <div class="top-status">
+        <span id="systemLed" class="led"></span>
+        <div><div id="systemState" class="status-main">STANDBY</div><div id="systemSubstate" class="status-sub">LOCAL SYSTEM</div></div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero-row" aria-label="System overview">
+        <div class="hero-copy">
+          <div class="eyebrow"><span class="eyebrow-line"></span> MOBILE RECONNAISSANCE INTERFACE</div>
+          <h1>See beyond<br><em>the ordinary.</em></h1>
+          <p class="hero-description">Live camera intelligence with a tactical visual layer. Processing stays on your device.</p>
+        </div>
+        <div class="mini-radar" aria-label="Decorative radar display">
+          <div class="radar-ring ring-a"></div><div class="radar-ring ring-b"></div><div class="radar-ring ring-c"></div>
+          <div class="radar-sweep"></div><span class="radar-blip b1"></span><span class="radar-blip b2"></span><span class="radar-blip b3"></span>
+          <span class="radar-center"></span>
+        </div>
+      </section>
+
+      <section class="view-card" aria-label="Camera and HUD preview">
+        <div class="view-head">
+          <div class="view-title-wrap"><span class="section-tag">01 / VISUAL FEED</span><h2>Environment scan</h2></div>
+          <div class="feed-badges"><span class="pill" id="feedBadge">CAMERA OFF</span><span class="pill pill-muted" id="aiBadge">AI STANDBY</span></div>
+        </div>
+        <div id="previewStage" class="preview-stage">
+          <video id="cameraVideo" playsinline muted aria-label="Live camera feed"></video>
+          <canvas id="hudCanvas" aria-hidden="true"></canvas>
+          <div id="emptyPreview" class="empty-preview">
+            <div class="empty-orbit"><div class="empty-core"></div><div class="orbit orbit-1"></div><div class="orbit orbit-2"></div><div class="orbit orbit-3"></div></div>
+            <div class="empty-title">SYSTEM READY</div>
+            <div class="empty-copy">Activate camera to begin visual analysis</div>
+            <div class="empty-note"><span></span> CAMERA PERMISSION REQUIRED</div>
+          </div>
+          <div class="corner corner-tl"></div><div class="corner corner-tr"></div><div class="corner corner-bl"></div><div class="corner corner-br"></div>
+          <div class="view-hud-top"><span id="viewModeLabel">OPTICAL SENSOR // IDLE</span><span id="viewClock">--:--:--</span></div>
+          <div class="view-hud-bottom"><span id="viewResolution">RESOLUTION // --</span><span id="fpsLabel">FPS --</span></div>
+          <div class="scan-line"></div>
+          <div id="toast" class="toast" role="status" aria-live="polite"></div>
+        </div>
+
+        <div class="feed-stats">
+          <div class="stat-cell"><span class="stat-label">OBJECTS</span><strong id="objectCount">00</strong><small id="objectSummary">No detections</small></div>
+          <div class="stat-cell"><span class="stat-label">INFERENCE</span><strong id="inferenceTime">—</strong><small>milliseconds / scan</small></div>
+          <div class="stat-cell"><span class="stat-label">POWER</span><strong id="batteryValue">—</strong><small id="batterySub">browser status</small></div>
+        </div>
+      </section>
+
+      <section class="control-section" aria-label="HUD controls">
+        <div class="section-heading"><div><span class="section-tag">02 / CONTROL DECK</span><h2>Mission controls</h2></div><span class="control-hint">TAP TO TOGGLE</span></div>
+        <div class="control-grid">
+          <button class="control control-primary" id="cameraBtn" type="button"><span class="control-icon">◉</span><span class="control-text"><strong>Start camera</strong><small>Activate visual feed</small></span><span class="control-arrow">↗</span></button>
+          <button class="control" id="aiBtn" type="button" disabled><span class="control-icon">⌖</span><span class="control-text"><strong>AI detection</strong><small>Objects in view</small></span><span class="control-switch" id="aiSwitch"></span></button>
+          <button class="control" id="switchBtn" type="button" disabled><span class="control-icon">⇄</span><span class="control-text"><strong>Switch camera</strong><small>Front / rear sensor</small></span></button>
+          <button class="control" id="roadBtn" type="button" disabled><span class="control-icon">⌁</span><span class="control-text"><strong>Road guide</strong><small>Perspective overlay</small></span><span class="control-switch" id="roadSwitch"></span></button>
+          <button class="control" id="gridBtn" type="button"><span class="control-icon">▦</span><span class="control-text"><strong>Spatial grid</strong><small>HUD reference lines</small></span><span class="control-switch active" id="gridSwitch"></span></button>
+          <button class="control" id="hudBtn" type="button"><span class="control-icon">◎</span><span class="control-text"><strong>HUD overlay</strong><small>Interface graphics</small></span><span class="control-switch active" id="hudSwitch"></span></button>
+          <button class="control" id="torchBtn" type="button" disabled><span class="control-icon">ϟ</span><span class="control-text"><strong>Flashlight</strong><small>Where supported</small></span><span class="control-switch" id="torchSwitch"></span></button>
+          <button class="control" id="captureBtn" type="button" disabled><span class="control-icon">▣</span><span class="control-text"><strong>Capture frame</strong><small>Save image locally</small></span></button>
+          <button class="control" id="voiceBtn" type="button"><span class="control-icon">♫</span><span class="control-text"><strong>Voice status</strong><small>Read system state</small></span></button>
+          <button class="control" id="voiceCommandBtn" type="button"><span class="control-icon">⌁</span><span class="control-text"><strong>Voice commands</strong><small>Tap and speak a command</small></span><span class="control-switch" id="voiceSwitch"></span></button>
+          <button class="control" id="fullscreenBtn" type="button"><span class="control-icon">⛶</span><span class="control-text"><strong>Immersive view</strong><small>Full screen mode</small></span></button>
+        </div>
+        <div class="control-footnote"><span class="tiny-led"></span> Camera and inference are activated only by your action.</div>
+      </section>
+
+      <section class="telemetry-card" aria-label="System telemetry">
+        <div class="section-heading"><div><span class="section-tag">03 / TELEMETRY</span><h2>System diagnostics</h2></div><span class="live-tag"><span></span> LIVE</span></div>
+        <div class="diagnostic-grid">
+          <div class="diagnostic"><span>LOCAL TIME</span><strong id="diagTime">--:--:--</strong></div>
+          <div class="diagnostic"><span>CAMERA MODE</span><strong id="diagCamera">INACTIVE</strong></div>
+          <div class="diagnostic"><span>AI ENGINE</span><strong id="diagAI">NOT LOADED</strong></div>
+          <div class="diagnostic"><span>NETWORK</span><strong id="diagNetwork">CHECKING</strong></div>
+        </div>
+        <div class="diagnostic-message" id="diagnosticMessage"><span class="message-mark">i</span><span>Ready. Start the camera to activate the visual feed.</span></div>
+      </section>
+
+      <section class="install-card" id="installCard">
+        <div class="install-icon">J<span>.</span></div>
+        <div class="install-copy"><strong>Take J.A.R.V.I.S with you</strong><p>Install this PWA on your home screen for an app-like experience.</p><small id="installHelp">Requires HTTPS hosting for installation and camera access.</small></div>
+        <button id="installBtn" type="button" class="install-btn">Install</button>
+      </section>
+
+      <section class="limits-card">
+        <div class="limits-icon">ⓘ</div><div><strong>Reality check</strong><p>Object detection uses an on-device model after its first download. The road guide is a visual perspective aid — not true depth mapping, navigation, or a safety system. Do not use the screen while driving or walking near traffic.</p></div>
+      </section>
+    </main>
+    <footer class="footer"><span>J.A.R.V.I.S / MOBILE HUD</span><span>BUILT FOR THE EDGE</span><span id="versionLabel">BUILD 1.0.0</span></footer>
+  </div>
+  <canvas id="captureCanvas" class="capture-canvas" aria-hidden="true"></canvas>
+  <script src="./app.js" defer></script>
+</body>
+</html>
