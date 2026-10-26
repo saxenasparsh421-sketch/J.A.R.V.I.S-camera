@@ -1,0 +1,17 @@
+{
+  "id": "./",
+  "name": "J.A.R.V.I.S Mobile Vision",
+  "short_name": "J.A.R.V.I.S",
+  "description": "Standalone mobile camera HUD with on-device object detection and road segmentation.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#050b13",
+  "theme_color": "#050b13",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {"src":"./icons/jarvis-192.png","sizes":"192x192","type":"image/png","purpose":"any maskable"},
+    {"src":"./icons/jarvis-512.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}
+  ]
+}
