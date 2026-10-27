@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+  <meta name="theme-color" content="#050b13">
+  <meta name="description" content="J.A.R.V.I.S standalone camera HUD with on-device object detection and road segmentation.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" href="./icons/jarvis-192.png">
+  <link rel="apple-touch-icon" href="./icons/jarvis-192.png">
+  <link rel="stylesheet" href="./styles.css">
+  <title>J.A.R.V.I.S | Mobile Vision</title>
+</head>
+<body>
+  <main class="app-shell">
+    <section class="camera-stage" id="cameraStage" aria-label="Camera view and augmented-reality overlays">
+      <video id="cameraVideo" playsinline muted autoplay aria-label="Live camera"></video>
+      <canvas id="hudCanvas" aria-label="Detection and HUD overlay"></canvas>
+      <div class="vignette"></div>
+      <div class="scanline"></div>
+
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark"><span>J</span><i></i></div>
+          <div><h1>J.A.R.V.I.S</h1><p>MOBILE VISION SYSTEM</p></div>
+        </div>
+        <button id="installBtn" class="icon-button" title="Install app" hidden aria-label="Install app">⇩</button>
+        <button id="settingsBtn" class="icon-button" title="Settings" aria-label="Settings">⚙</button>
+      </header>
+
+      <div class="telemetry top-left">
+        <div class="telemetry-label">VISION LINK <span class="led" id="cameraLed"></span></div>
+        <div class="telemetry-value" id="cameraState">CAMERA STANDBY</div>
+        <div class="telemetry-sub" id="cameraInfo">Awaiting permission</div>
+      </div>
+      <div class="telemetry top-right">
+        <div class="telemetry-label">SYSTEM STATUS</div>
+        <div class="telemetry-value" id="systemState">READY</div>
+        <div class="telemetry-sub"><span id="fpsValue">0</span> DET FPS · <span id="clockValue">--:--:--</span></div>
+      </div>
+
+      <div class="center-reticle" aria-hidden="true">
+        <span class="reticle-corner tl"></span><span class="reticle-corner tr"></span>
+        <span class="reticle-corner bl"></span><span class="reticle-corner br"></span>
+        <span class="reticle-dot"></span><span class="reticle-ring"></span>
+      </div>
+
+      <div class="bottom-telemetry">
+        <div class="metric"><span>OBJECTS</span><b id="objectCount">0</b></div>
+        <div class="metric"><span>ROAD MASK</span><b id="roadState">OFFLINE</b></div>
+        <div class="metric"><span>INFERENCE</span><b id="inferenceTime">— ms</b></div>
+      </div>
+      <div class="hint-chip" id="hintChip">CAMERA OFF · START TO BEGIN</div>
+    </section>
+
+    <section class="control-deck">
+      <div class="section-heading"><div><span class="eyebrow">COMMAND DECK</span><h2>Vision controls</h2></div><span class="status-pill" id="enginePill"><i></i> ENGINE IDLE</span></div>
+      <div class="primary-actions">
+        <button id="cameraBtn" class="action-button primary"><span class="button-symbol">◉</span><span><b>Start camera</b><small>Enable live view</small></span></button>
+        <button id="aiBtn" class="action-button"><span class="button-symbol">⌘</span><span><b>Object AI</b><small id="aiButtonSub">Not loaded</small></span></button>
+        <button id="roadBtn" class="action-button"><span class="button-symbol">▱</span><span><b>Road AI</b><small id="roadButtonSub">Not loaded</small></span></button>
+      </div>
+      <div class="control-grid">
+        <button id="switchCameraBtn" class="control-button"><span>⇄</span>Switch camera</button>
+        <button id="gridBtn" class="control-button active"><span>▦</span>Grid <em>ON</em></button>
+        <button id="hudBtn" class="control-button active"><span>⌖</span>HUD <em>ON</em></button>
+        <button id="captureBtn" class="control-button"><span>◎</span>Capture</button>
+        <button id="torchBtn" class="control-button"><span>ϟ</span>Flashlight</button>
+        <button id="stopBtn" class="control-button danger"><span>■</span>Stop all</button>
+      </div>
+
+      <div class="voice-row">
+        <div class="voice-icon">◖))</div>
+        <div class="voice-copy"><b>J.A.R.V.I.S voice link</b><small id="voiceState">Voice output ready · Commands need browser support</small></div>
+        <button id="speakBtn" class="voice-button">Speak status</button>
+      </div>
+      <div class="voice-actions">
+        <button id="voiceCommandBtn" class="outline-button">🎙 Speak command</button>
+        <button id="testVoiceBtn" class="outline-button">▶ Test voice</button>
+      </div>
+
+      <details class="console-panel" open>
+        <summary><span>LIVE SYSTEM CONSOLE</span><span id="logCount">0 EVENTS</span></summary>
+        <div id="consoleLog" class="console-log" role="log" aria-live="polite"><p><time>BOOT</time><span>J.A.R.V.I.S initialized. Waiting for camera.</span></p></div>
+      </details>
+      <p class="safety-note">Experimental visual assistance only. It is not a navigation or obstacle-avoidance system. Do not use while walking or driving.</p>
+    </section>
+  </main>
+
+  <dialog id="settingsDialog" class="settings-dialog">
+    <form method="dialog" class="settings-form">
+      <div class="dialog-heading"><div><span class="eyebrow">SYSTEM CONFIGURATION</span><h2>Settings</h2></div><button class="icon-button close-dialog" aria-label="Close settings">×</button></div>
+      <label class="setting-row"><span>Detection confidence <small>Raise it to reduce weak detections</small></span><output id="confidenceOutput">45%</output><input id="confidenceRange" type="range" min="20" max="85" step="5" value="45"></label>
+      <label class="setting-row"><span>Object detection rate <small>Lower rate may improve performance</small></span><select id="detRate"><option value="250">Fast · 4 FPS target</option><option value="400" selected>Balanced · 2–3 FPS</option><option value="700">Battery saver</option></select></label>
+      <label class="setting-row"><span>J.A.R.V.I.S voice <small>Choose from voices exposed by your browser</small></span><select id="voiceSelect"><option value="">System default</option></select></label>
+      <label class="setting-row"><span>Voice language <small>Speech recognition language</small></span><select id="speechLang"><option value="en-IN" selected>English (India)</option><option value="en-GB">English (UK)</option><option value="en-US">English (US)</option><option value="hi-IN">Hindi (India)</option></select></label>
+      <div class="settings-note">The voice list is provided by Android/browser TTS. A specific male voice is used only when the device exposes one; otherwise the selected system voice is used.</div>
+      <button class="action-button primary save-settings" value="close"><span>✓</span><span><b>Save settings</b><small>Apply preferences</small></span></button>
+    </form>
+  </dialog>
+  <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
